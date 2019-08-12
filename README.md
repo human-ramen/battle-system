@@ -1,5 +1,5 @@
 # BattleSystem
-[![Build Status](https://travis-ci.com/xdefrag/BattleSystem.svg?branch=master)](https://travis-ci.com/xdefrag/BattleSystem)
+[![Build Status](https://travis-ci.com/xdefrag/BattleSystem.svg?branch=master)](https://travis-ci.com/xdefrag/BattleSystem)  
 Turn based battle system example with [MonoGame](https://github.com/MonoGame/MonoGame) and [MonoGame.Extended.Entities](https://github.com/craftworkgames/MonoGame.Extended).
 
 # Tests
