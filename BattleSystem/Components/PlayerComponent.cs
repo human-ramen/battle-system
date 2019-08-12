@@ -1,4 +1,6 @@
 namespace BattleSystem.Components
 {
-    public class PlayerComponent { }
+    public class PlayerComponent
+    {
+    }
 }

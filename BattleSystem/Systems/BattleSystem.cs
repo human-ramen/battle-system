@@ -5,76 +5,118 @@ using MonoGame.Extended.Entities.Systems;
 
 namespace BattleSystem.Systems
 {
+    /// <summary>
+    ///   Accumulates ActionDoSystem, TurnSystem and AiSystem.
+    /// </summary>
     public class BattleSystem : EntityUpdateSystem
     {
-        private enum turn
+        private readonly Logger _l;
+
+        private enum state
         {
-            unknown,
-            player,
-            enemy,
+            Unknown,
+            InProcess,
+            Win,
+            Lose,
         }
+        private state _state;
+        private BattleComponent _battle = null;
+        private Entity _entity = null;
 
-        private turn _turn;
-
-        private ComponentMapper<PlayerComponent> _playerMapper;
-        private ComponentMapper<PropComponent> _propMapper;
+        private ComponentMapper<BattleComponent> _battleMapper;
         private ComponentMapper<StatusComponent> _statusMapper;
 
-        public BattleSystem() : base(Aspect.All(typeof(BattleComponent)))
+        public BattleSystem() : base(Aspect.One(typeof(BattleComponent)))
         {
-
+            _l = new Logger("BattleSystem");
         }
 
         public override void Initialize(IComponentMapperService mapperService)
         {
-            _playerMapper = mapperService.GetMapper<PlayerComponent>();
-            _propMapper = mapperService.GetMapper<PropComponent>();
+            _battleMapper = mapperService.GetMapper<BattleComponent>();
             _statusMapper = mapperService.GetMapper<StatusComponent>();
-
-            // TODO: turn logic.
-
-            _turn = turn.player;
         }
 
         public override void Update(GameTime gameTime)
         {
-            foreach (var entity in ActiveEntities)
+            // unknown => inprocess
+            if (_state == state.Unknown)
             {
-                if (isPlayer(entity) && isPlayerTurn())
+                foreach (var entity in ActiveEntities)
                 {
-                    playerBehavior(entity);
+                    _battle = _battleMapper.Get(entity);
+
+                    if (_battle != null) { setInProcessState(entity); return; }
                 }
-                else if (!isPlayer(entity) && isEnemyTurn())
+            }
+            else // inprocess => won/lose => unknown
+                if (_state == state.InProcess)
+            {
+                if (isAllEnemiesDead()) { setWinState(); }
+                else
+                if (isPlayerDead()) { setLoseState(); }
+            }
+        }
+
+        private void setInProcessState(int entity)
+        {
+            _l.Info("Battle started");
+            _state = state.InProcess;
+
+            _entity = GetEntity(entity);
+            _entity.Attach(new TurnComponent());
+            _entity.Attach(new AiComponent());
+        }
+
+        private void setWinState()
+        {
+            _l.Info("All enemies is dead. Win!");
+            _state = state.Win;
+
+            // TODO: do some fancy-pancy win shit
+
+            setUnknownState();
+        }
+
+        private void setLoseState()
+        {
+            _l.Info("Player is dead. Lose!");
+            _state = state.Lose;
+
+            // TODO: sorry screen
+
+            setUnknownState();
+        }
+
+        private void setUnknownState()
+        {
+            _l.Info("Back to Unknown state");
+            _state = state.Unknown;
+            _battleMapper.Delete(_entity.Id);
+            _battle = null;
+            _entity = null;
+        }
+
+        private bool isAllEnemiesDead()
+        {
+            foreach (var enemy in _battle.Enemies)
+            {
+                var status = _statusMapper.Get(enemy);
+
+                if (status.Health >= 0)
                 {
-                    enemyBehavior(entity);
+                    return false;
                 }
             }
 
+            return true;
         }
 
-        private void playerBehavior(int entity)
+        private bool isPlayerDead()
         {
-            // TODO: player doing something
-        }
+            var status = _statusMapper.Get(_battle.Player);
 
-        private void enemyBehavior(int entity)
-        {
-            // TODO: enemy doing something
-        }
-
-        private bool isPlayer(int entity)
-        {
-            return _playerMapper.Has(entity);
-        }
-
-        private bool isPlayerTurn()
-        {
-            return _turn == turn.player;
-        }
-
-        private bool isEnemyTurn()
-        {
-            return _turn == turn.enemy;
+            return status.Health <= 0;
         }
     }
 }
