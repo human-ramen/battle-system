@@ -1,0 +1,6 @@
+language: csharp
+mono: latest
+script:
+  - dotnet restore BattleSystem
+  - dotnet restore Tests/BattleSystem.Systems.Tests
+  - dotnet test Tests/BattleSystem.Systems.Tests
