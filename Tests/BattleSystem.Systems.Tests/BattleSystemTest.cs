@@ -16,7 +16,7 @@ namespace BattleSystem.Systems.Tests
         {
             _world = new WorldBuilder()
                 .AddSystem(new AiSystem())
-                .AddSystem(new ActionDoSystem())
+                .AddSystem(new ActionSystem())
                 .AddSystem(new TurnSystem())
                 .AddSystem(new BattleSystem())
                 .Build();
@@ -30,7 +30,7 @@ namespace BattleSystem.Systems.Tests
             player.Attach(new StatusComponent());
             player.Attach(new PropComponent());
 
-            var playerActions = new SlugActionsComponent();
+            var playerActions = new ActionsComponent();
 
             player.Attach(playerActions);
 
@@ -42,7 +42,7 @@ namespace BattleSystem.Systems.Tests
                 var enemy = _world.CreateEntity();
                 enemy.Attach(new StatusComponent());
                 enemy.Attach(new PropComponent());
-                enemy.Attach(new SlugActionsComponent());
+                enemy.Attach(new ActionsComponent());
 
                 enemies.Add(enemy);
             }
@@ -58,7 +58,8 @@ namespace BattleSystem.Systems.Tests
                 var turn = battle.Get<TurnComponent>();
                 if (turn != null && turn.State == Turn.Player)
                 {
-                    battle.Attach(new ActionDoComponent(playerActions.DrinkCoffee, player));
+                    battle.Get<ActionQueueComponent>()
+                      .Add(new ActionQueueItem(playerActions.DrinkCoffee, player));
                     battle.Attach(new TurnEndComponent());
                 }
             }

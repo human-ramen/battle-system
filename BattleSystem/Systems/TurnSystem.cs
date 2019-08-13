@@ -19,7 +19,6 @@ namespace BattleSystem.Systems
 
         private ComponentMapper<TurnComponent> _turnMapper;
         private ComponentMapper<TurnEndComponent> _turnEndMapper;
-        private ComponentMapper<ActionDoComponent> _actionDoMapper;
 
         public TurnSystem() : base(Aspect.One(typeof(TurnComponent)))
         {
@@ -30,7 +29,6 @@ namespace BattleSystem.Systems
         {
             _turnMapper = mapperService.GetMapper<TurnComponent>();
             _turnEndMapper = mapperService.GetMapper<TurnEndComponent>();
-            _actionDoMapper = mapperService.GetMapper<ActionDoComponent>();
         }
 
         // TODO: Add action points restrictions.

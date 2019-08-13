@@ -66,6 +66,7 @@ namespace BattleSystem.Systems
             _entity = GetEntity(entity);
             _entity.Attach(new TurnComponent());
             _entity.Attach(new AiComponent());
+            _entity.Attach(new ActionQueueComponent());
         }
 
         private void setWinState()
@@ -92,7 +93,9 @@ namespace BattleSystem.Systems
         {
             _l.Info("Back to Unknown state");
             _state = state.Unknown;
-            _battleMapper.Delete(_entity.Id);
+
+            DestroyEntity(_entity.Id);
+
             _battle = null;
             _entity = null;
         }

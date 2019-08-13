@@ -8,22 +8,22 @@ namespace BattleSystem.Systems
     /// <summary>
     ///   ActionDoSystem do Action to Target with calculations and state changing.
     /// </summary>
-    public class ActionDoSystem : EntityUpdateSystem
+    public class ActionSystem : EntityUpdateSystem
     {
         private readonly Logger _l;
 
-        private ComponentMapper<ActionDoComponent> _actionDoMapper;
+        private ComponentMapper<ActionQueueComponent> _actionQueueMapper;
         private ComponentMapper<PropComponent> _propMapper;
         private ComponentMapper<StatusComponent> _statusMapper;
 
-        public ActionDoSystem() : base(Aspect.All(typeof(ActionDoComponent)))
+        public ActionSystem() : base(Aspect.One(typeof(ActionQueueComponent)))
         {
-            _l = new Logger("ActionDoSystem");
+            _l = new Logger("ActionSystem");
         }
 
         public override void Initialize(IComponentMapperService mapperService)
         {
-            _actionDoMapper = mapperService.GetMapper<ActionDoComponent>();
+            _actionQueueMapper = mapperService.GetMapper<ActionQueueComponent>();
             _propMapper = mapperService.GetMapper<PropComponent>();
             _statusMapper = mapperService.GetMapper<StatusComponent>();
         }
@@ -32,29 +32,28 @@ namespace BattleSystem.Systems
         {
             foreach (var entity in ActiveEntities)
             {
-                var actionDo = _actionDoMapper.Get(entity);
-                if (actionDo != null)
-                {
+                var queue = _actionQueueMapper.Get(entity);
 
-                    var targetProp = _propMapper.Get(actionDo.Target);
-                    var targetStatus = _statusMapper.Get(actionDo.Target);
+                while (!queue.Empty())
+                {
+                    var action = queue.Pop();
+                    var targetProp = _propMapper.Get(action.Target);
+                    var targetStatus = _statusMapper.Get(action.Target);
 
                     // TODO: Add damage/heal calculations.
-                    switch (actionDo.Action.Nature)
+                    switch (action.Action.Nature)
                     {
                         case Nature.Coffee:
                             _l.Info("Target was healed");
-                            targetStatus.Health += actionDo.Action.Amount;
+                            targetStatus.Health += action.Action.Amount;
                             break;
                         default:
                             _l.Info("Target taken damage");
-                            targetStatus.Health -= actionDo.Action.Amount;
+                            targetStatus.Health -= action.Action.Amount;
                             break;
                     }
 
                 }
-
-                _actionDoMapper.Delete(entity);
             }
         }
     }

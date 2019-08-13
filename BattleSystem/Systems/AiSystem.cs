@@ -16,7 +16,8 @@ namespace BattleSystem.Systems
         private ComponentMapper<AiComponent> _aiMapper;
         private ComponentMapper<TurnComponent> _turnMapper;
         private ComponentMapper<BattleComponent> _battleMapper;
-        private ComponentMapper<SlugActionsComponent> _slugManager;
+        private ComponentMapper<ActionsComponent> _actionsManager;
+        private ComponentMapper<ActionQueueComponent> _queueManager;
         private ComponentMapper<StatusComponent> _statusManager;
 
         public AiSystem() : base(Aspect.One(typeof(AiComponent)))
@@ -29,7 +30,8 @@ namespace BattleSystem.Systems
             _aiMapper = mapperService.GetMapper<AiComponent>();
             _turnMapper = mapperService.GetMapper<TurnComponent>();
             _battleMapper = mapperService.GetMapper<BattleComponent>();
-            _slugManager = mapperService.GetMapper<SlugActionsComponent>();
+            _actionsManager = mapperService.GetMapper<ActionsComponent>();
+            _queueManager = mapperService.GetMapper<ActionQueueComponent>();
             _statusManager = mapperService.GetMapper<StatusComponent>();
         }
 
@@ -47,6 +49,7 @@ namespace BattleSystem.Systems
         {
             var entity = GetEntity(entityId);
             var battle = _battleMapper.Get(entity);
+            var queue = _queueManager.Get(entity);
 
             // TODO: adv ai with bunch of ifelses, oh yeah
             foreach (var enemy in battle.Enemies)
@@ -54,19 +57,17 @@ namespace BattleSystem.Systems
                 _l.Info("Enemy decides what to do");
 
                 var status = _statusManager.Get(enemy);
-                var slug = _slugManager.Get(enemy);
-                if (slug != null)
+                var actions = _actionsManager.Get(enemy);
+
+                if (status.Health >= 3)
                 {
-                    if (status.Health >= 3)
-                    {
-                        _l.Info("Enemy throwing a stepler");
-                        entity.Attach(new ActionDoComponent(slug.ThrowStapler, battle.Player));
-                    }
-                    else
-                    {
-                        _l.Info("Enemy health is low, time to drink some COFFEE");
-                        entity.Attach(new ActionDoComponent(slug.DrinkCoffee, enemy));
-                    }
+                    _l.Info("Enemy throwing a stepler");
+                    queue.Add(new ActionQueueItem(actions.ThrowStaper, battle.Player, enemy));
+                }
+                else
+                {
+                    _l.Info("Enemy health is low, time to drink some COFFEE");
+                    queue.Add(new ActionQueueItem(actions.DrinkCoffee, battle.Player, enemy));
                 }
             }
 
